@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="6.0"
+         xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+                             https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd">
+
+    <!-- ── Servlet Declarations ─────────────────────────── -->
+    <servlet>
+        <servlet-name>RegisterServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.RegisterServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>VerifyServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.VerifyServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>LoginServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.LoginServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>LogoutServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.LogoutServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>SendSmsServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.SendSmsServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>SmsHistoryServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.SmsHistoryServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>DeleteSmsServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.DeleteSmsServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ProfileServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.ProfileServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminCustomerServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.AdminCustomerServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>SessionCheckServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.SessionCheckServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>ResendOtpServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.ResendOtpServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AdminAddCustomerServlet</servlet-name>
+        <servlet-class>iti.tel.twilio_project.AdminAddCustomerServlet</servlet-class>
+    </servlet>
+
+    <!-- ── URL Mappings ─────────────────────────────────── -->
+    <servlet-mapping>
+        <servlet-name>RegisterServlet</servlet-name>
+        <url-pattern>/RegisterServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VerifyServlet</servlet-name>
+        <url-pattern>/VerifyServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>LoginServlet</servlet-name>
+        <url-pattern>/LoginServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>LogoutServlet</servlet-name>
+        <url-pattern>/LogoutServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>SendSmsServlet</servlet-name>
+        <url-pattern>/SendSmsServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>SmsHistoryServlet</servlet-name>
+        <url-pattern>/SmsHistoryServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>DeleteSmsServlet</servlet-name>
+        <url-pattern>/DeleteSmsServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ProfileServlet</servlet-name>
+        <url-pattern>/ProfileServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminCustomerServlet</servlet-name>
+        <url-pattern>/AdminCustomerServlet</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>SessionCheckServlet</servlet-name>
+        <url-pattern>/SessionCheckServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ResendOtpServlet</servlet-name>
+        <url-pattern>/ResendOtpServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AdminAddCustomerServlet</servlet-name>
+        <url-pattern>/AdminAddCustomerServlet</url-pattern>
+    </servlet-mapping>
+
+    <!-- ── Session Config ───────────────────────────────── -->
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+
+    <!-- ── Default welcome page ─────────────────────────── -->
+    <welcome-file-list>
+        <welcome-file>login.html</welcome-file>
+    </welcome-file-list>
+
+</web-app>
