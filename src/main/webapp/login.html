@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twilio SMS Portal | Sign In</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #001f3f;
+            --accent-color: #007bff;
+            --accent-hover: #0056b3;
+            --bg-body: #f4f7f6;
+            --bg-card: #ffffff;
+            --text-dark: #1a1a1a;
+            --text-muted: #6c757d;
+            --border-color: #e0e0e0;
+            --radius-md: 10px;
+            --shadow-card: 0 15px 35px rgba(0,0,0,0.1);
+            --danger: #dc3545;
+            --success: #28a745;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-body);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 20px;
+        }
+        .login-card {
+            background: var(--bg-card); width: 100%; max-width: 440px;
+            border-radius: var(--radius-md); box-shadow: var(--shadow-card);
+            overflow: hidden; animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .card-header {
+            background-color: var(--primary-color); color: white;
+            padding: 40px; text-align: center;
+        }
+        .card-header h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+        .card-header p  { color: #b0c4de; font-size: 0.95rem; }
+        .card-body { padding: 40px; }
+        .input-group { display: flex; flex-direction: column; margin-bottom: 22px; }
+        .input-group label { font-size: 0.9rem; font-weight: 600; color: var(--text-dark); margin-bottom: 8px; }
+        .input-group input {
+            padding: 12px 15px; font-size: 1rem; border: 2px solid var(--border-color);
+            border-radius: 6px; transition: all 0.2s ease; color: var(--text-dark);
+        }
+        .input-group input:focus {
+            outline: none; border-color: var(--accent-color);
+            background-color: #f0f8ff; box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1);
+        }
+        .input-group input::placeholder { color: #adb5bd; }
+        .btn-login {
+            width: 100%; background-color: var(--accent-color); color: white;
+            font-size: 1.1rem; font-weight: 700; padding: 14px;
+            border: none; border-radius: 30px; cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
+        }
+        .btn-login:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
+        .btn-login:active { transform: translateY(1px); }
+        .card-footer { text-align: center; margin-top: 25px; font-size: 0.95rem; color: var(--text-muted); }
+        .card-footer a { color: var(--accent-color); text-decoration: none; font-weight: 600; }
+        .card-footer a:hover { text-decoration: underline; }
+        .alert {
+            padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;
+            font-size: 0.9rem; font-weight: 600; text-align: center;
+        }
+        .alert-danger  { background: #fde8ea; color: var(--danger);  border: 1px solid #f5c6cb; }
+        .alert-success { background: #d4edda; color: var(--success); border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="card-header">
+            <h1>📡 SMS Portal</h1>
+            <p>Sign in to manage your Twilio communications</p>
+        </div>
+        <div class="card-body">
+            <!-- Dynamic alert messages -->
+            <div id="alertBox" style="display:none;" class="alert"></div>
+
+            <form action="LoginServlet" method="POST">
+                <div class="input-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-login">Sign In</button>
+            </form>
+
+            <div class="card-footer">
+                Don't have an account? <a href="RegisterPage.html">Create one here</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show feedback messages from query params
+        const params = new URLSearchParams(window.location.search);
+        const alertBox = document.getElementById('alertBox');
+        const messages = {
+            invalid_credentials: { type: 'danger',  text: 'Invalid email or password. Please try again.' },
+            not_verified:        { type: 'danger',  text: 'Please verify your phone number before signing in.' },
+            server_error:        { type: 'danger',  text: 'A server error occurred. Please try again.' },
+            verified:            { type: 'success', text: '✅ Phone verified! You can now sign in.' },
+            logout:              { type: 'success', text: 'You have been signed out successfully.' }
+        };
+        const error = params.get('error') || (params.get('verified') ? 'verified' : null) || (params.get('logout') ? 'logout' : null);
+        if (error && messages[error]) {
+            alertBox.className = 'alert alert-' + messages[error].type;
+            alertBox.textContent = messages[error].text;
+            alertBox.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
