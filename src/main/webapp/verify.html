@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Number | SMS Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #001f3f;
+            --accent-color: #007bff;
+            --accent-hover: #0056b3;
+            --bg-body: #f4f7f6;
+            --bg-card: #ffffff;
+            --text-dark: #1a1a1a;
+            --text-muted: #6c757d;
+            --border-color: #e0e0e0;
+            --radius-md: 12px;
+            --shadow: 0 15px 35px rgba(0,0,0,0.1);
+            --danger: #dc3545;
+            --success: #28a745;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', sans-serif; background-color: var(--bg-body);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 20px;
+        }
+        .verify-card {
+            background: var(--bg-card); width: 100%; max-width: 450px;
+            padding: 40px; border-radius: var(--radius-md); box-shadow: var(--shadow);
+            text-align: center; animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .icon-box {
+            width: 70px; height: 70px; background: #eef6ff; color: var(--accent-color);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 25px; font-size: 30px;
+        }
+        h2  { color: var(--primary-color); margin-bottom: 10px; font-size: 1.6rem; }
+        p   { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 30px; line-height: 1.5; }
+        .otp-container { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; }
+        .otp-input {
+            width: 50px; height: 60px; text-align: center; font-size: 1.5rem; font-weight: 700;
+            border: 2px solid var(--border-color); border-radius: 8px;
+            transition: all 0.2s ease; color: var(--primary-color); font-family: inherit;
+        }
+        .otp-input:focus {
+            outline: none; border-color: var(--accent-color);
+            background-color: #f0f8ff; box-shadow: 0 0 0 4px rgba(0,123,255,0.1);
+        }
+        .btn-verify {
+            width: 100%; background-color: var(--accent-color); color: white;
+            padding: 14px; border: none; border-radius: 30px; font-size: 1rem;
+            font-weight: 700; cursor: pointer; transition: all 0.2s; margin-bottom: 20px;
+            font-family: inherit;
+        }
+        .btn-verify:hover { background-color: var(--accent-hover); }
+        .resend-section {
+            background: #f8f9fa; border-radius: 10px; padding: 20px; margin-top: 10px;
+        }
+        .resend-section p { margin-bottom: 12px; font-size: 0.9rem; }
+        .resend-input {
+            width: 100%; padding: 10px 14px; font-size: 0.95rem;
+            border: 2px solid var(--border-color); border-radius: 6px;
+            margin-bottom: 10px; font-family: inherit; transition: border-color 0.2s;
+        }
+        .resend-input:focus { outline: none; border-color: var(--accent-color); background: #f0f8ff; }
+        .btn-resend {
+            width: 100%; background: transparent; border: 2px solid var(--accent-color);
+            color: var(--accent-color); padding: 10px; border-radius: 30px; font-size: 0.9rem;
+            font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit;
+        }
+        .btn-resend:hover { background: var(--accent-color); color: white; }
+        .alert {
+            padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; font-weight: 600;
+        }
+        .alert-danger  { background: #fde8ea; color: var(--danger);  border: 1px solid #f5c6cb; }
+        .alert-success { background: #d4edda; color: var(--success); border: 1px solid #c3e6cb; }
+        .back-link {
+            display: inline-block; margin-top: 20px;
+            color: var(--accent-color); font-size: 0.9rem; text-decoration: none;
+        }
+        .back-link:hover { text-decoration: underline; }
+        @media (max-width: 400px) { .otp-input { width: 40px; height: 50px; } }
+    </style>
+</head>
+<body>
+    <div class="verify-card">
+        <div class="icon-box">📲</div>
+        <h2>Verification Code</h2>
+        <p>We've sent a 6-digit code to your phone via SMS.<br>Enter it below to activate your account.</p>
+
+        <div id="alertBox" style="display:none;" class="alert"></div>
+
+        <!-- OTP form -->
+        <form action="VerifyServlet" method="POST" id="otpForm">
+            <div class="otp-container">
+                <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required>
+                <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required>
+                <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required>
+                <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required>
+                <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required>
+                <input type="text" class="otp-input" maxlength="1" pattern="\d*" inputmode="numeric" required>
+            </div>
+            <input type="hidden" name="full_otp" id="fullOtp">
+            <button type="submit" class="btn-verify">✅ Verify & Activate</button>
+        </form>
+
+        <!-- Resend section -->
+        <div class="resend-section">
+            <p>Didn't receive the code or it expired?</p>
+            <form action="ResendOtpServlet" method="POST">
+                <input type="email" class="resend-input" name="email"
+                       placeholder="Enter your registered email" required>
+                <button type="submit" class="btn-resend">📨 Resend New Code</button>
+            </form>
+        </div>
+
+        <a href="login.html" class="back-link">← Back to Sign In</a>
+    </div>
+
+    <script>
+        const inputs     = document.querySelectorAll('.otp-input');
+        const hiddenInput = document.getElementById('fullOtp');
+
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/, '');
+                if (e.target.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+                updateHiddenInput();
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+            input.addEventListener('paste', (e) => {
+                const pasted = e.clipboardData.getData('text').replace(/\D/g, '');
+                if (pasted.length === 6) {
+                    e.preventDefault();
+                    pasted.split('').forEach((ch, i) => { if (inputs[i]) inputs[i].value = ch; });
+                    updateHiddenInput();
+                    inputs[5].focus();
+                }
+            });
+        });
+
+        function updateHiddenInput() {
+            let code = "";
+            inputs.forEach(i => code += i.value);
+            hiddenInput.value = code;
+        }
+
+        // Feedback messages from URL params
+        const params   = new URLSearchParams(window.location.search);
+        const alertBox = document.getElementById('alertBox');
+        const messages = {
+            invalid_otp:       { type: 'danger',  text: '❌ Invalid or expired code. Please request a new one below.' },
+            server_error:      { type: 'danger',  text: '❌ A server error occurred. Please try again.' },
+            account_not_found: { type: 'danger',  text: '❌ Email not found or account is already verified.' },
+            missing_email:     { type: 'danger',  text: '❌ Please enter your email address to resend.' },
+            resent:            { type: 'success', text: '✅ A new code has been sent to your phone.' }
+        };
+        const key = params.get('error') || (params.get('resent') ? 'resent' : null);
+        if (key && messages[key]) {
+            alertBox.className = 'alert alert-' + messages[key].type;
+            alertBox.textContent = messages[key].text;
+            alertBox.style.display = 'block';
+        }
+
+        window.onload = () => inputs[0].focus();
+    </script>
+</body>
+</html>
