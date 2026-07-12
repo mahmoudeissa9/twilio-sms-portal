@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | SMS Portal</title>
+    <script>
+        // Session guard: redirect to login if not logged in as ADMIN
+        fetch('SessionCheckServlet?required=ADMIN')
+            .then(r => {
+                if (r.status === 401) { window.location.href = 'login.html'; }
+                if (r.status === 403) {
+                    r.json().then(d => {
+                        if (d.role === 'CUSTOMER') window.location.href = 'customer_home.html';
+                        else window.location.href = 'login.html';
+                    });
+                }
+            })
+            .catch(() => window.location.href = 'login.html');
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #001f3f;
+            --accent:  #007bff;
+            --accent-hover: #0056b3;
+            --danger:  #dc3545;
+            --warning: #ffc107;
+            --success: #28a745;
+            --bg:      #f4f7f6;
+            --card:    #ffffff;
+            --text:    #1a1a1a;
+            --muted:   #6c757d;
+            --border:  #e0e0e0;
+            --radius:  10px;
+            --shadow:  0 4px 20px rgba(0,0,0,0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Verdana, sans-serif; background: var(--bg); color: var(--text); }
+
+        /* NAVBAR */
+        .navbar {
+            background: var(--primary); color: white; padding: 0 30px;
+            display: flex; align-items: center; justify-content: space-between; height: 64px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .navbar .brand { font-size: 1.3rem; font-weight: 700; }
+        .navbar .brand span { font-size: 0.8rem; background: var(--warning); color: #000;
+            padding: 3px 10px; border-radius: 12px; margin-left: 10px; font-weight: 700; }
+        .nav-btn {
+            background: transparent; color: white; border: 2px solid rgba(255,255,255,0.3);
+            padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 0.9rem;
+            font-weight: 600; transition: all 0.2s; font-family: inherit;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.15); border-color: white; }
+        .nav-btn.logout { border-color: rgba(220,53,69,0.6); color: #ff8a8a; }
+        .nav-btn.logout:hover { background: rgba(220,53,69,0.2); }
+
+        /* LAYOUT */
+        .main { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+
+        /* STATS CARDS */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+        .stat-card {
+            background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+            padding: 24px; display: flex; align-items: center; gap: 16px;
+        }
+        .stat-icon { font-size: 2.2rem; }
+        .stat-info .stat-val { font-size: 2rem; font-weight: 700; color: var(--primary); }
+        .stat-info .stat-label { font-size: 0.9rem; color: var(--muted); }
+
+        /* ALERT */
+        .alert {
+            padding: 14px 20px; border-radius: var(--radius); margin-bottom: 24px; font-weight: 600;
+        }
+        .alert-success { background: #d4edda; color: var(--success); border: 1px solid #c3e6cb; }
+        .alert-danger  { background: #fde8ea; color: var(--danger);  border: 1px solid #f5c6cb; }
+
+        /* TABS */
+        .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 2px solid var(--border); }
+        .tab-btn {
+            padding: 12px 24px; background: none; border: none; cursor: pointer;
+            font-size: 1rem; font-weight: 600; color: var(--muted); border-radius: 6px 6px 0 0;
+            transition: all 0.2s; font-family: inherit; border-bottom: 3px solid transparent; margin-bottom: -2px;
+        }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: #f0f8ff; }
+        .tab-btn:hover:not(.active) { color: var(--text); background: #f9f9f9; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* CARD */
+        .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; margin-bottom: 24px; }
+        .card-title {
+            font-size: 1.2rem; font-weight: 700; color: var(--primary);
+            margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--border);
+        }
+
+        /* TABLE */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th {
+            background: var(--primary); color: white; padding: 12px 14px;
+            text-align: left; font-weight: 600; white-space: nowrap;
+        }
+        td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8f9fa; }
+        .no-data { text-align: center; color: var(--muted); padding: 40px; }
+
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; }
+        .badge-ok  { background: #d4edda; color: var(--success); }
+        .badge-no  { background: #fde8ea; color: var(--danger);  }
+        .badge-sms { background: #e8f4fd; color: var(--accent);  }
+
+        /* ACTION BUTTONS in table */
+        .action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn {
+            padding: 7px 14px; border: none; border-radius: 20px; cursor: pointer;
+            font-size: 0.82rem; font-weight: 700; transition: all 0.2s; font-family: inherit;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-danger  { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-warning { background: var(--warning); color: #000; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-lg { padding: 12px 28px; font-size: 1rem; border-radius: 30px; }
+
+        /* STAT BAR */
+        .stat-bar-wrap { margin-bottom: 14px; }
+        .stat-bar-label { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 4px; }
+        .stat-bar-bg { background: var(--border); border-radius: 8px; height: 10px; overflow: hidden; }
+        .stat-bar-fill { height: 100%; border-radius: 8px; background: var(--accent); transition: width 0.8s ease; }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.55); z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: var(--card); border-radius: var(--radius);
+            width: 95%; max-width: 560px; padding: 32px; max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-title { font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 20px; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+        .input-group { display: flex; flex-direction: column; margin-bottom: 16px; }
+        .input-group label { font-size: 0.88rem; font-weight: 600; margin-bottom: 6px; }
+        .input-group input {
+            padding: 10px 14px; font-size: 0.95rem; border: 2px solid var(--border);
+            border-radius: 6px; transition: all 0.2s; font-family: inherit;
+        }
+        .input-group input:focus { outline: none; border-color: var(--accent); background: #f0f8ff; }
+
+        @media (max-width: 768px) {
+            .stats-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="brand">📡 SMS Portal <span>ADMIN</span></div>
+    <div style="display:flex; gap:8px; align-items:center;">
+        <span id="adminName" style="color:#b0c4de; font-size:0.9rem;"></span>
+        <button class="nav-btn logout" onclick="location.href='LogoutServlet'">🚪 Logout</button>
+    </div>
+</nav>
+
+<div class="main">
+
+    <!-- Alert -->
+    <div id="globalAlert" style="display:none;" class="alert"></div>
+
+    <!-- STAT CARDS (loaded dynamically) -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+                <div class="stat-val" id="statCustomers">–</div>
+                <div class="stat-label">Total Customers</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+                <div class="stat-val" id="statVerified">–</div>
+                <div class="stat-label">Verified Accounts</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📨</div>
+            <div class="stat-info">
+                <div class="stat-val" id="statSms">–</div>
+                <div class="stat-label">Total SMS Sent</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('customers')" id="tab-customers">👥 Customers</button>
+        <button class="tab-btn"        onclick="showTab('stats')"     id="tab-stats">📊 SMS Statistics</button>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB 1: CUSTOMERS
+    ══════════════════════════════════════ -->
+    <div class="tab-pane active" id="pane-customers">
+        <div class="card">
+            <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>👥 All Customers</span>
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Add Customer</button>
+            </div>
+            <div class="table-wrap">
+                <table id="customerTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Verified</th>
+                            <th>SMS Sent</th>
+                            <th>Registered</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerTableBody">
+                        <tr><td colspan="8" class="no-data">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         TAB 2: SMS STATISTICS
+    ══════════════════════════════════════ -->
+    <div class="tab-pane" id="pane-stats">
+        <div class="card">
+            <div class="card-title">📊 SMS Statistics per Customer</div>
+            <div id="statsContainer"><p class="no-data">Loading statistics...</p></div>
+        </div>
+    </div>
+
+</div><!-- /main -->
+
+<!-- ══════════════════════════════════════
+     EDIT CUSTOMER MODAL
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <div class="modal-title">✏️ Edit Customer</div>
+        <form id="editForm">
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="id"     id="editId">
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" name="name" id="editName" required>
+            </div>
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" id="editEmail" required>
+            </div>
+            <div class="input-group">
+                <label>Phone</label>
+                <input type="tel" name="phone" id="editPhone">
+            </div>
+            <div class="input-group">
+                <label>Job Title</label>
+                <input type="text" name="job" id="editJob">
+            </div>
+            <div class="input-group">
+                <label>Address</label>
+                <input type="text" name="address" id="editAddress">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-warning" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- VIEW CUSTOMER MODAL -->
+<div class="modal-overlay" id="viewModal">
+    <div class="modal">
+        <div class="modal-title">👤 Customer Details</div>
+        <div id="viewContent"></div>
+        <div class="modal-actions">
+            <button class="btn btn-primary" onclick="document.getElementById('viewModal').classList.remove('open')">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Page init ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    loadCustomers();
+    // set admin name from session cookie (not available; use profile endpoint)
+    fetch('ProfileServlet').then(r=>r.json()).then(d => {
+        document.getElementById('adminName').textContent = 'Hi, ' + (d.name || 'Admin');
+    }).catch(()=>{});
+});
+
+// ── Alert ─────────────────────────────────────────────────────
+function showAlert(type, text) {
+    const el = document.getElementById('globalAlert');
+    el.className = 'alert alert-' + type;
+    el.textContent = text;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 5000);
+}
+const params = new URLSearchParams(window.location.search);
+if (params.get('success') === 'customer_deleted') showAlert('success', '✅ Customer deleted.');
+if (params.get('success') === 'customer_updated') showAlert('success', '✅ Customer updated.');
+if (params.get('success') === 'customer_added')   showAlert('success', '✅ New customer added successfully.');
+if (params.get('error')   === 'email_exists')     showAlert('danger',  '❌ That email is already registered.');
+else if (params.get('error'))                     showAlert('danger',  '❌ An error occurred. Please try again.');
+
+// ── Tab switching ─────────────────────────────────────────────
+function showTab(name) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('pane-' + name).classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+    if (name === 'stats') loadStats();
+}
+
+// ── Load customers list ───────────────────────────────────────
+let allCustomers = [];
+function loadCustomers() {
+    fetch('AdminCustomerServlet')
+        .then(r => r.json())
+        .then(data => {
+            allCustomers = data;
+            // update stat cards
+            document.getElementById('statCustomers').textContent = data.length;
+            document.getElementById('statVerified').textContent  = data.filter(c=>c.is_verified).length;
+            document.getElementById('statSms').textContent       = data.reduce((s,c)=>s+c.sms_count,0);
+
+            const tbody = document.getElementById('customerTableBody');
+            if (!data.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No customers yet.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map((c, i) => `
+                <tr>
+                    <td>${i+1}</td>
+                    <td><strong>${escHtml(c.name)}</strong></td>
+                    <td>${escHtml(c.email)}</td>
+                    <td>${escHtml(c.phone)}</td>
+                    <td><span class="badge ${c.is_verified ? 'badge-ok':'badge-no'}">${c.is_verified ? '✓ Yes':'✗ No'}</span></td>
+                    <td><span class="badge badge-sms">📨 ${c.sms_count}</span></td>
+                    <td style="white-space:nowrap;">${formatDate(c.created_at)}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn btn-primary" onclick="viewCustomer(${c.id})">👁 View</button>
+                            <button class="btn btn-warning" onclick="editCustomer(${c.id})">✏️ Edit</button>
+                            <button class="btn btn-danger"  onclick="deleteCustomer(${c.id}, '${escHtml(c.name)}')">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        })
+        .catch(() => {
+            document.getElementById('customerTableBody').innerHTML =
+                '<tr><td colspan="8" class="no-data">Failed to load customers.</td></tr>';
+        });
+}
+
+// ── View customer detail ──────────────────────────────────────
+function viewCustomer(id) {
+    fetch('AdminCustomerServlet?id=' + id)
+        .then(r => r.json())
+        .then(c => {
+            document.getElementById('viewContent').innerHTML = `
+                <table style="width:100%; font-size:0.95rem; border-collapse:collapse;">
+                    ${row('Name', c.name)} ${row('Email', c.email)}
+                    ${row('Phone', c.phone)} ${row('Birthday', c.birthday)}
+                    ${row('Job', c.job)} ${row('Address', c.address)}
+                    ${row('Twilio SID', c.twilio_sid)} ${row('Sender ID', c.sender_id)}
+                    ${row('Verified', c.is_verified ? '✅ Yes' : '❌ No')}
+                    ${row('Registered', formatDate(c.created_at))}
+                </table>`;
+            document.getElementById('viewModal').classList.add('open');
+        });
+}
+function row(label, val) {
+    return `<tr>
+        <td style="padding:8px 4px; font-weight:600; color:#001f3f; width:40%;">${label}</td>
+        <td style="padding:8px 4px; color:#444;">${escHtml(String(val||'–'))}</td>
+    </tr>`;
+}
+
+// ── Edit customer ─────────────────────────────────────────────
+function editCustomer(id) {
+    const c = allCustomers.find(x => x.id === id);
+    if (!c) { fetch('AdminCustomerServlet?id=' + id).then(r=>r.json()).then(fillEdit); return; }
+    fillEdit(c);
+}
+function fillEdit(c) {
+    document.getElementById('editId').value      = c.id;
+    document.getElementById('editName').value    = c.name    || '';
+    document.getElementById('editEmail').value   = c.email   || '';
+    document.getElementById('editPhone').value   = c.phone   || '';
+    document.getElementById('editJob').value     = c.job     || '';
+    document.getElementById('editAddress').value = c.address || '';
+    document.getElementById('editModal').classList.add('open');
+}
+function closeModal() {
+    document.getElementById('editModal').classList.remove('open');
+}
+
+// Submit edit form via POST
+document.getElementById('editForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const data = new FormData(this);
+    fetch('AdminCustomerServlet', { method: 'POST', body: data })
+        .then(() => {
+            closeModal();
+            showAlert('success', '✅ Customer updated.');
+            loadCustomers();
+        })
+        .catch(() => showAlert('danger', '❌ Update failed.'));
+});
+
+// ── Delete customer ───────────────────────────────────────────
+function deleteCustomer(id, name) {
+    if (!confirm(`Delete customer "${name}"?\nThis will also delete all their SMS history.`)) return;
+    const form = new FormData();
+    form.append('action', 'delete');
+    form.append('id', id);
+    fetch('AdminCustomerServlet', { method: 'POST', body: form })
+        .then(() => {
+            showAlert('success', '✅ Customer deleted.');
+            loadCustomers();
+        })
+        .catch(() => showAlert('danger', '❌ Delete failed.'));
+}
+
+// ── Load SMS statistics ───────────────────────────────────────
+function loadStats() {
+    fetch('AdminCustomerServlet?action=stats')
+        .then(r => r.json())
+        .then(data => {
+            const maxSms = data.reduce((m, c) => Math.max(m, c.sms_count), 1);
+            const container = document.getElementById('statsContainer');
+            if (!data.length) {
+                container.innerHTML = '<p class="no-data">No data yet.</p>';
+                return;
+            }
+            container.innerHTML = data.map(c => `
+                <div class="stat-bar-wrap">
+                    <div class="stat-bar-label">
+                        <span><strong>${escHtml(c.name)}</strong> <small style="color:#6c757d;">${escHtml(c.email)}</small></span>
+                        <span><strong>${c.sms_count}</strong> SMS</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-fill" style="width:${Math.round(c.sms_count/maxSms*100)}%"></div>
+                    </div>
+                </div>
+            `).join('');
+        })
+        .catch(() => {
+            document.getElementById('statsContainer').innerHTML = '<p class="no-data">Failed to load stats.</p>';
+        });
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function escHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = String(s || '');
+    return d.innerHTML;
+}
+function formatDate(d) {
+    if (!d) return '–';
+    return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+</script>
+<!-- ADD CUSTOMER MODAL -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal">
+        <div class="modal-title">➕ Add New Customer</div>
+        <form action="AdminAddCustomerServlet" method="POST">
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                <div class="input-group" style="grid-column:span 2;">
+                    <label>Full Name *</label>
+                    <input type="text" name="name" placeholder="Mahmoud Ali" required>
+                </div>
+                <div class="input-group">
+                    <label>Email *</label>
+                    <input type="email" name="email" placeholder="user@example.com" required>
+                </div>
+                <div class="input-group">
+                    <label>Password *</label>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                </div>
+                <div class="input-group">
+                    <label>Phone (MSISDN)</label>
+                    <input type="tel" name="phone" placeholder="+201...">
+                </div>
+                <div class="input-group">
+                    <label>Birthday</label>
+                    <input type="date" name="birthday">
+                </div>
+                <div class="input-group">
+                    <label>Job Title</label>
+                    <input type="text" name="job" placeholder="Engineer">
+                </div>
+                <div class="input-group">
+                    <label>Address</label>
+                    <input type="text" name="address" placeholder="Cairo, Egypt">
+                </div>
+                <div class="input-group" style="grid-column:span 2;">
+                    <label>Twilio Account SID</label>
+                    <input type="text" name="twilio_sid" placeholder="ACxxxxxxxxxx">
+                </div>
+                <div class="input-group">
+                    <label>Twilio Auth Token</label>
+                    <input type="password" name="twilio_token" placeholder="Token">
+                </div>
+                <div class="input-group">
+                    <label>Allowed Sender ID</label>
+                    <input type="text" name="sender_id" placeholder="+12345 or MyBrand">
+                </div>
+            </div>
+
+            <p style="font-size:0.82rem; color:#6c757d; margin-top:12px;">
+                * Admin-created accounts are automatically verified and can log in immediately.
+            </p>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-warning" onclick="closeAddModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">➕ Create Customer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddModal()  { document.getElementById('addModal').classList.add('open'); }
+function closeAddModal() { document.getElementById('addModal').classList.remove('open'); }
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+        if (e.target === this) this.classList.remove('open');
+    });
+});
+</script>
+
+</body>
+</html>
